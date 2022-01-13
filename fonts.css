@@ -1,0 +1,11 @@
+@font-face {
+    font-family: 'Titan One';
+    font-style: normal;
+    src: local('Titan One'), url('https://fonts.gstatic.com/s/titanone/v8/mFTzWbsGxbbS_J5cQcjClDgm.woff2') format('truetype');
+}
+
+@font-face {
+    font-family: 'Nunito';
+    font-style: normal;
+    src: local('Nunito'), url('https://fonts.gstatic.com/s/nunito/v20/XRXV3I6Li01BKofINeaB.woff2') format('truetype');
+}

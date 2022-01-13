@@ -1,0 +1,41 @@
+.joinGameContainer {
+    background-color: #0bc2cf;
+    position: absolute;
+    display: flex;
+    top: 55px;
+    bottom: 0;
+    width: 100%;
+    z-index: -1;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.joinGameContainer > * {
+    margin: 10px;
+}
+
+.joinGameTitle {
+    color: white;
+    font-family: 'Titan One', sans-serif;
+    font-size: 70px;
+    font-weight: 400;
+    text-shadow: 2px 2px 8px grey;
+    text-align: center;
+}
+
+button {
+    border-radius: 6px;
+    padding: 5px 20px 5px 20px;
+    text-align: center;
+    color: #5f5f5f;
+    box-shadow: 0 0 8px 3px rgba(0,0,0,.2);
+    border: none;
+    outline: none;
+    font-size: 35px;
+    font-weight: 700;
+}
+
+input {
+    max-width: 70%;
+}
