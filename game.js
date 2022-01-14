@@ -2,14 +2,13 @@
 
 // firebase imports
 // https://firebase.google.com/docs/web/alt-setup
-import {
-    initializeApp
-} from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-app.js'
-import {
-    getAuth,
-    signInWithCustomToken
-} from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-auth.js'
-import {} from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-database.js'
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-app.js'
+import { getAuth, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-auth.js'
+import { getDatabase, ref, onValue, set, onDisconnect, get } from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-database.js'
+
+// jquery-like selector shortcuts
+const $ = selector => document.querySelector(selector)
+const $$ = selector => document.querySelectorAll(selector)
 
 // get variables passed by join.html
 const queryParams = new URLSearchParams(window.location.search)
@@ -68,23 +67,64 @@ const authenticate = async (username, gameId) => {
     })
     const response = await request.json()
     const fbToken = response['fbToken']
-    console.dir(response)
 
     const auth = getAuth()
     await signInWithCustomToken(auth, fbToken)
     return response['blook']
 }
 
-
+// log in and do stuff
 const playGame = async () => {
     var blook
     try {
         blook = await authenticate(username, gameId)
     } catch (e) {
         alert("Auth error: " + e.toString())
+        return
     }
 
-    alert(blook)
+    // database references
+    const db = getDatabase()
+    const dbRoot = `${gameId}/`
+    const players = `${dbRoot}c/`
+
+    // detect when the game is connected and act accordingly
+    onValue(ref(db, dbRoot + 'ho'), (snapshot) => {
+        const host = snapshot.val()
+        if (host) {
+            // join the lobby
+            set(ref(db, players + username), { b: blook })
+            // make sure the game is left when leaving page
+            onDisconnect(ref(db, players + username)).remove()
+            // erase loading icon and show game info on screen
+            $('#innerContainer').innerHTML = ''
+            $('#innerContainer').appendChild(document.createElement('p'))
+            // get more data
+            get(ref(db, dbRoot)).then((snapshot) => {
+                const data = snapshot.val()
+                $('#innerContainer > p')
+                    .innerHTML = `Host: ${host}<br>`
+                               + `Gamemode: ${data.s.t}<br>`
+                               + 'Waiting for host to start game.'
+                // change the page title
+                $('#pageTitle').innerText = 'Waiting in Lobby'
+            })
+            onValue(ref(db, dbRoot + 'stg'), onGameStart, { onlyOnce: true })
+        }
+    }, { onlyOnce: true })
 }
 
-//playGame()
+// when the game starts
+const onGameStart = async (snapshot) => {
+    const stg = snapshot.val()
+    if (!stg) {
+        $('#innerContainer > p').innerText = 'Error: game is gone'
+        return
+    }
+
+    // placeholder until gameplay is implemented
+    $('#innerContainer > p').innerText = 'game started but you can\'t play it'
+}
+
+
+playGame()
