@@ -1,14 +1,29 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Play Blooket</title>
-        <link rel="stylesheet" href="fonts.css">
-        <link rel="stylesheet" href="default.css">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body>
-        <h1>Booklet Web</h1>
-        <h2>Not yet implemented</h2>
-        <p>Sorry!</p>
-    </body>
+
+<head>
+    <title>Play Blooket</title>
+    <link rel="stylesheet" href="fonts.css">
+    <link rel="stylesheet" href="default.css">
+    <link rel="stylesheet" href="game.css">
+    <link rel="stylesheet" href="loadingSpinner.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <h1>Booklet Web <span class="pageTitle">Connecting</span></h1>
+    <div class="gameContainer">
+        <div class="container">
+            <div class="loader">
+                <div class="loaderBox">
+                    <img src="https://blooket.s3.us-east-2.amazonaws.com/blooks/colors/lightBlueBlook.svg" class="loaderBlook">
+                </div>
+                <div class="loaderShadow"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="game.js"></script>
+</body>
+
 </html>
