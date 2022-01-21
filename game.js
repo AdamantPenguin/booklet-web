@@ -79,7 +79,8 @@ const playGame = async () => {
     try {
         blook = await authenticate(username, gameId)
     } catch (e) {
-        alert("Auth error: " + e.toString())
+        $('#statusContainer').innerHTML =
+          `<p>Auth failed:<br>${e}<br>Did you enter the Game ID correctly?</p>`
         return
     }
 
@@ -97,34 +98,60 @@ const playGame = async () => {
             // make sure the game is left when leaving page
             onDisconnect(ref(db, players + username)).remove()
             // erase loading icon and show game info on screen
-            $('#innerContainer').innerHTML = ''
-            $('#innerContainer').appendChild(document.createElement('p'))
+            $('#statusContainer').innerHTML = ''
+            $('#statusContainer').appendChild(document.createElement('p'))
             // get more data
             get(ref(db, dbRoot)).then((snapshot) => {
                 const data = snapshot.val()
-                $('#innerContainer > p')
+                $('#statusContainer > p')
                     .innerHTML = `Host: ${host}<br>`
                                + `Gamemode: ${data.s.t}<br>`
                                + 'Waiting for host to start game.'
                 // change the page title
                 $('#pageTitle').innerText = 'Waiting in Lobby'
+
+                console.log(data.stg)
             })
-            onValue(ref(db, dbRoot + 'stg'), onGameStart, { onlyOnce: true })
+            onValue(ref(db, dbRoot + 'stg'), (snapshot) => {
+                const stg = snapshot.val()
+                if (!stg) {
+                    $('#statusContainer > p').innerText = 'Error: game is gone'
+                    return
+                } else if (stg === 'end') {
+                    onGameEnd()
+                } else if (stg !== 'join') {
+                    onGameStart(stg)
+                }
+            })
         }
     }, { onlyOnce: true })
 }
 
 // when the game starts
-const onGameStart = async (snapshot) => {
-    const stg = snapshot.val()
-    if (!stg) {
-        $('#innerContainer > p').innerText = 'Error: game is gone'
-        return
-    }
+const onGameStart = (stg) => {
+    console.log('onGameStart called')
+
+    switchToScreen('question')
 
     // placeholder until gameplay is implemented
-    $('#innerContainer > p').innerText = 'game started but you can\'t play it'
+    // $('#statusContainer > p').innerText = 'game started but you can\'t play it'
 }
 
+
+// when the game ends but is not yet closed
+const onGameEnd = () => {
+    // placeholder
+    $('#statusContainer > p').innerText = 'game ended'
+}
+
+
+// switch screen
+const switchToScreen = (screen) => {
+    const screens = {
+        'question': $('#questionScreen')
+    }
+    Object.values(screens).forEach(node => node.style.display = 'none')
+    screens[screen].style.display = 'flex'
+}
 
 playGame()

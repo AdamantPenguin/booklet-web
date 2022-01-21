@@ -12,8 +12,8 @@
 
 <body>
     <h1>Booklet Web <span class="pageTitle" id="pageTitle">Connecting</span></h1>
-    <div class="gameContainer" id="outerContainer">
-        <div class="container" id="innerContainer">
+    <div class="gameContainer" id="backgroundContainer">
+        <div class="container" id="statusContainer">
             <div class="loader">
                 <div class="loaderBox">
                     <img src="https://blooket.s3.us-east-2.amazonaws.com/blooks/colors/lightBlueBlook.svg" class="loaderBlook">
@@ -21,6 +21,10 @@
                 <div class="loaderShadow"></div>
             </div>
         </div>
+    </div>
+
+    <div class="gameContainer" id="questionScreen" style="display: none">
+        <p>Question goes here!</p>
     </div>
 
     <script type="module" src="game.js"></script>
