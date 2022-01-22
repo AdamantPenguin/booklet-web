@@ -76,3 +76,7 @@ input {
     font-size: 35px;
     font-weight: 700;
 }
+
+button {
+    cursor: pointer;
+}

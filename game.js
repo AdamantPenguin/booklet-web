@@ -15,6 +15,10 @@ const queryParams = new URLSearchParams(window.location.search)
 const gameId = queryParams.get('id')
 const username = queryParams.get('nick')
 
+var gameSet, setId
+var isGameInProgress = false
+
+
 // configurate the firebase
 // blooket uses a different databaseURL depending on the game ID,
 //  so this absolute mess is required
@@ -101,7 +105,7 @@ const playGame = async () => {
             $('#statusContainer').innerHTML = ''
             $('#statusContainer').appendChild(document.createElement('p'))
             // get more data
-            get(ref(db, dbRoot)).then((snapshot) => {
+            get(ref(db, dbRoot)).then(async (snapshot) => {
                 const data = snapshot.val()
                 $('#statusContainer > p')
                     .innerHTML = `Host: ${host}<br>`
@@ -110,48 +114,107 @@ const playGame = async () => {
                 // change the page title
                 $('#pageTitle').innerText = 'Waiting in Lobby'
 
-                console.log(data.stg)
+                setId = data.set
+
+                onValue(ref(db, dbRoot + 'stg'), (snapshot) => {
+                    const stg = snapshot.val()
+                    console.log(stg)
+                    if (!stg) {
+                        $('#statusContainer > p').innerText = 'Game offline'
+                        return
+                    } else if (stg === 'fin') {
+                        onGameEnd()
+                    } else if (stg === 'inst') {
+                        switchToScreen('instruction')
+                    } else if (stg !== 'join') {
+                        onGameStart(stg)
+                    }
+                })
             })
-            onValue(ref(db, dbRoot + 'stg'), (snapshot) => {
-                const stg = snapshot.val()
-                if (!stg) {
-                    $('#statusContainer > p').innerText = 'Error: game is gone'
-                    return
-                } else if (stg === 'end') {
-                    onGameEnd()
-                } else if (stg !== 'join') {
-                    onGameStart(stg)
-                }
-            })
+            
         }
     }, { onlyOnce: true })
 }
 
 // when the game starts
-const onGameStart = (stg) => {
+const onGameStart = async (stg) => {
     console.log('onGameStart called')
+    $('#pageTitle').innerText = ''
+    isGameInProgress = true
 
-    switchToScreen('question')
-
-    // placeholder until gameplay is implemented
-    // $('#statusContainer > p').innerText = 'game started but you can\'t play it'
+    // get question set
+    gameSet = await (await fetch(
+        'https://blooket-api-getter.glitch.me/games?gameId='
+        + setId
+    )).json()
+    
+    console.log(gameSet)
+    runQuestion()
 }
 
 
 // when the game ends but is not yet closed
 const onGameEnd = () => {
+    isGameInProgress = false
     // placeholder
-    $('#statusContainer > p').innerText = 'game ended'
+    switchToScreen()
+    $('#statusContainer > p').innerText = 'Game ended'
 }
+
+// show a question and return the correct answer if it was wrong or nothing if
+//   it was right
+const runQuestion = () => {
+    switchToScreen('question')
+
+    const qId = Math.floor(Math.random() * gameSet.numQuestions)
+    const question = gameSet.questions[qId]
+    $('#questionImage').src = question.image.url
+    $('#question').innerText = question.question
+    $('#answer1').innerText = question.answers[0]
+    $('#answer2').innerText = question.answers[1]
+    $('#answer3').innerText = question.answers[2]
+    $('#answer4').innerText = question.answers[3]
+
+    question.answers.forEach((text, index) => {
+        if (question.correctAnswers.includes(text)) {
+            $(`#answer${index+1}`).onclick = () => choseCorrectAnswer()
+        } else {
+            $(`#answer${index+1}`).onclick = () => choseIncorrectAnswer(
+                question.correctAnswers[0]
+            )
+        }
+    })
+}
+
+// handle correct answer being chosen
+const choseCorrectAnswer = () => {
+    switchToScreen('correct')
+}
+
+// handle incorrect answer being chosen
+const choseIncorrectAnswer = (correctAnswer) => {
+    $('#correctAnswer').innerText = correctAnswer
+    switchToScreen('incorrect')
+}
+
+// onclicks for correct and incorrect screens
+$('#correctScreen').onclick = runQuestion  // TODO: money & mode-specific stuff
+$('#incorrectScreen').onclick = runQuestion
 
 
 // switch screen
 const switchToScreen = (screen) => {
     const screens = {
-        'question': $('#questionScreen')
+        'question': $('#questionScreen'),
+        'instruction': $('#instructionScreen'),
+        'correct': $('#correctScreen'),
+        'incorrect': $('#incorrectScreen')
     }
     Object.values(screens).forEach(node => node.style.display = 'none')
-    screens[screen].style.display = 'flex'
+    if (screen) {
+        screens[screen].style.display = 'flex'
+    }
 }
+window.globalThis.switchToScreen = switchToScreen // allow use in debug console
 
 playGame()

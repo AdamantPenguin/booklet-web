@@ -1,33 +1,55 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <title>Play Blooket</title>
+        <link rel="stylesheet" href="fonts.css">
+        <link rel="stylesheet" href="default.css">
+        <link rel="stylesheet" href="game.css">
+        <link rel="stylesheet" href="loadingSpinner.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
 
-<head>
-    <title>Play Blooket</title>
-    <link rel="stylesheet" href="fonts.css">
-    <link rel="stylesheet" href="default.css">
-    <link rel="stylesheet" href="game.css">
-    <link rel="stylesheet" href="loadingSpinner.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-
-<body>
-    <h1>Booklet Web <span class="pageTitle" id="pageTitle">Connecting</span></h1>
-    <div class="gameContainer" id="backgroundContainer">
-        <div class="container" id="statusContainer">
-            <div class="loader">
-                <div class="loaderBox">
-                    <img src="https://blooket.s3.us-east-2.amazonaws.com/blooks/colors/lightBlueBlook.svg" class="loaderBlook">
+    <body>
+        <h1>Booklet Web <span class="pageTitle" id="pageTitle">Connecting</span></h1>
+        <div class="gameContainer" id="backgroundContainer">
+            <div class="container" id="statusContainer">
+                <div class="loader">
+                    <div class="loaderBox">
+                        <img src="https://blooket.s3.us-east-2.amazonaws.com/blooks/colors/lightBlueBlook.svg" class="loaderBlook">
+                    </div>
+                    <div class="loaderShadow"></div>
                 </div>
-                <div class="loaderShadow"></div>
             </div>
         </div>
-    </div>
 
-    <div class="gameContainer" id="questionScreen" style="display: none">
-        <p>Question goes here!</p>
-    </div>
+        <div class="gameContainer" id="instructionScreen" style="display: none">
+            <p>Read the instructions on the host's screen</p>
+        </div>
 
-    <script type="module" src="game.js"></script>
-</body>
+        <div class="gameContainer" id="questionScreen" style="display: none">
+            <img src="" id="questionImage">
+            <p id="question"></p>
+            <div class="qRow">
+                <button id="answer1" class="answerButton"></button>
+                <button id="answer2" class="answerButton"></button>
+            </div>
+            <div class="qRow">
+                <button id="answer3" class="answerButton"></button>
+                <button id="answer4" class="answerButton"></button>
+            </div>
+        </div>
 
+        <div class="gameContainer" id="correctScreen" style="display: none">
+            <p class="bigLabel">Correct</p>
+            <p>Click anywhere to continue</p>
+        </div>
+
+        <div class="gameContainer" id="incorrectScreen" style="display: none">
+            <p class="bigLabel">Incorrect</p>
+            <p>Correct answer: <span id="correctAnswer"></span></p>
+            <p>Click anywhere to continue</p>
+        </div>
+
+        <script type="module" src="game.js"></script>
+    </body>
 </html>
