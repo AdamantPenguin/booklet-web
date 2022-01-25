@@ -6,6 +6,9 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.2/firebase
 import { getAuth, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-auth.js'
 import { getDatabase, ref, onValue, set, onDisconnect, get } from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-database.js'
 
+// helper functions
+import { weightedRandom, coinsKeyFromMode } from './helpers.js'
+
 // jquery-like selector shortcuts
 const $ = selector => document.querySelector(selector)
 const $$ = selector => document.querySelectorAll(selector)
@@ -15,8 +18,31 @@ const queryParams = new URLSearchParams(window.location.search)
 const gameId = queryParams.get('id')
 const username = queryParams.get('nick')
 
-var gameSet, setId
-var isGameInProgress = false
+var localDb, gameSet, setId, gamemode
+
+// possible rewards and their chance of being given
+const rewards = [
+    { type: 'take%', amount: 0.25, chance: 0.12, label: 'Take 25%' },
+    { type: 'add', amount: 40, chance: 0.1, label: '+40 coins' },
+    { type: 'add', amount: 10, chance: 0.1, label: '+10 coins' },
+    { type: 'take%', amount: 0.1, chance: 0.09, label: 'Take 10%' },
+    { type: 'mult', amount: 3, chance: 0.08, label: 'Triple coins' },
+    { type: 'swap', chance: 0.08, label: 'Swap' },
+    { type: 'add', amount: 30, chance: 0.08, label: '+30 coins' },
+    { type: 'add', amount: 0, chance: 0.08, label: 'Nothing lol' },
+    { type: 'mult', amount: 0.75, chance: 0.06, label: 'Lose 25% :D' },
+    { type: 'mult', amount: 2, chance: 0.06, label: 'Double coins' },
+    { type: 'add', amount: 100, chance: 0.06, label: '+100 coins' },
+    { type: 'add', amount: 50, chance: 0.04, label: '+50 coins' },
+    { type: 'mult', amount: 0.5, chance: 0.03, label: 'Lose 50% ;D' },
+    { type: 'add', amount: 20, chance: 0.02, label: '+20 coins' }
+]
+
+// transform rewards list from more readable format to more usable format
+var processedRewards = []
+rewards.forEach((item) => {
+    processedRewards.push({ weight: item.chance, item: item })
+})
 
 
 // configurate the firebase
@@ -115,6 +141,7 @@ const playGame = async () => {
                 $('#pageTitle').innerText = 'Waiting in Lobby'
 
                 setId = data.set
+                gamemode = data.s.t
 
                 onValue(ref(db, dbRoot + 'stg'), (snapshot) => {
                     const stg = snapshot.val()
@@ -130,6 +157,19 @@ const playGame = async () => {
                         onGameStart(stg)
                     }
                 })
+
+                // keep track of money on screen
+                const coinsKey = coinsKeyFromMode(gamemode)
+                onValue(ref(db, `${players}/${username}/${coinsKey}`), (snapshot) => {
+                    const balance = snapshot.val()
+                    $('#balance').innerText = balance
+                })
+
+                // maintain a local copy of the game's database
+                onValue(ref(db, gameId), (snapshot) => {
+                    const data = snapshot.val()
+                    localDb = data
+                })
             })
             
         }
@@ -140,29 +180,25 @@ const playGame = async () => {
 const onGameStart = async (stg) => {
     console.log('onGameStart called')
     $('#pageTitle').innerText = ''
-    isGameInProgress = true
 
     // get question set
     gameSet = await (await fetch(
         'https://blooket-api-getter.glitch.me/games?gameId='
         + setId
     )).json()
-    
-    console.log(gameSet)
+
     runQuestion()
 }
 
 
 // when the game ends but is not yet closed
 const onGameEnd = () => {
-    isGameInProgress = false
     // placeholder
     switchToScreen()
     $('#statusContainer > p').innerText = 'Game ended'
 }
 
-// show a question and return the correct answer if it was wrong or nothing if
-//   it was right
+// show a question and switch to the appropriate screen on answer
 const runQuestion = () => {
     switchToScreen('question')
 
@@ -172,8 +208,19 @@ const runQuestion = () => {
     $('#question').innerText = question.question
     $('#answer1').innerText = question.answers[0]
     $('#answer2').innerText = question.answers[1]
-    $('#answer3').innerText = question.answers[2]
-    $('#answer4').innerText = question.answers[3]
+    if (question.answers.length >= 3) {
+        $('#answer3').innerText = question.answers[2]
+        $('#answer3').hidden = false
+        if (question.answers.length >= 4) {
+            $('#answer4').innerText = question.answers[3]
+            $('#answer4').hidden = false
+        } else {
+            $('#answer4').hidden = true
+        }
+    } else {
+        $('#answer3').hidden = true
+        $('#answer4').hidden = true
+    }
 
     question.answers.forEach((text, index) => {
         if (question.correctAnswers.includes(text)) {
@@ -187,7 +234,35 @@ const runQuestion = () => {
 }
 
 // handle correct answer being chosen
-const choseCorrectAnswer = () => {
+const choseCorrectAnswer = async () => {
+    // pick reward, give it, and show on screen
+    const chosenReward = weightedRandom(processedRewards)
+    $('#reward').innerText = chosenReward.label
+
+    const coinsKey = coinsKeyFromMode(gamemode)
+    const db = getDatabase()
+    var currentBalance = parseInt(localDb.c[username][coinsKey])
+    if (isNaN(currentBalance)) { currentBalance = 0 }
+
+    switch (chosenReward.type) {
+        case 'add':
+            set(
+                ref(db, `${gameId}/c/${username}/${coinsKey}`),
+                currentBalance + chosenReward.amount
+            )
+            break
+        case 'mult':
+            set(
+                ref(db, `${gameId}/c/${username}/${coinsKey}`),
+                currentBalance * chosenReward.amount
+            )
+            break
+        case 'swap':
+        case 'take%':
+        default:
+            $('#reward').innerText += ' - NYI'
+    }
+
     switchToScreen('correct')
 }
 

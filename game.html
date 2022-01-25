@@ -10,7 +10,11 @@
     </head>
 
     <body>
-        <h1>Booklet Web <span class="pageTitle" id="pageTitle">Connecting</span></h1>
+        <h1>
+            Booklet Web
+            <span id="balance"></span>
+            <span class="pageTitle" id="pageTitle">Connecting</span>
+        </h1>
         <div class="gameContainer" id="backgroundContainer">
             <div class="container" id="statusContainer">
                 <div class="loader">
@@ -41,6 +45,7 @@
 
         <div class="gameContainer" id="correctScreen" style="display: none">
             <p class="bigLabel">Correct</p>
+            <p>Reward: <span id="reward"></span></p>
             <p>Click anywhere to continue</p>
         </div>
 

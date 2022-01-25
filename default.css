@@ -18,7 +18,7 @@ h1 {
     height: 35px;
 }
 
-span.pageTitle {
+.pageTitle {
     text-align: center;
     position: absolute;
     left: 50%;

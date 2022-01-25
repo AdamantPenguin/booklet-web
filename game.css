@@ -111,3 +111,11 @@ button {
     font-size: 35px;
     font-weight: 700;
 }
+
+#balance {
+    text-align: right;
+    position: absolute;
+    right: 5px;
+    font-size: 30px;
+    font-weight: 500;
+}
