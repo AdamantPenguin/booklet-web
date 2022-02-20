@@ -3,7 +3,7 @@
 // firebase imports
 // https://firebase.google.com/docs/web/alt-setup
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-app.js'
-import { getAuth, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-auth.js'
+import { getAuth, signInWithCustomToken, setPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-auth.js'
 import { getDatabase, ref, onValue, set, onDisconnect, get } from 'https://www.gstatic.com/firebasejs/9.6.2/firebase-database.js'
 
 // helper functions
@@ -99,6 +99,7 @@ const authenticate = async (username, gameId) => {
     const fbToken = response['fbToken']
 
     const auth = getAuth()
+    await setPersistence(auth, browserSessionPersistence)
     await signInWithCustomToken(auth, fbToken)
     return response['blook']
 }
@@ -160,10 +161,13 @@ const playGame = async () => {
 
                 // keep track of money on screen
                 const coinsKey = coinsKeyFromMode(gamemode)
-                onValue(ref(db, `${players}/${username}/${coinsKey}`), (snapshot) => {
-                    const balance = snapshot.val()
-                    $('#balance').innerText = balance
-                })
+                onValue(
+                    ref(db, `${players}/${username}/${coinsKey}`),
+                    (snapshot) => {
+                        const balance = snapshot.val()
+                        $('#balance').innerText = balance
+                    }
+                )
 
                 // maintain a local copy of the game's database
                 onValue(ref(db, gameId), (snapshot) => {
